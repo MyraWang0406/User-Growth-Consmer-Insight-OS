@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI 广告主自动化投放工作台 | Advertiser Agent OS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+    :root{
+      --brand:#1677FF;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:rgba(226,232,240,1);
+      --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+              "PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC","Source Han Sans SC",
+              Arial, sans-serif;
+    }
+    html,body{ font-family: var(--font); }
+    *{ font-family: inherit; }
+
+    body{
+      background-color:#F7F9FB;
+      color:var(--text);
+    }
+
+    .glass-card{
+      background:#FFFFFF;
+      border:1px solid var(--border);
+      transition:all .32s cubic-bezier(.175,.885,.32,1.06);
+    }
+    .glass-card:hover{
+      transform:translateY(-5px);
+      box-shadow:0 22px 28px -10px rgba(0,0,0,.03);
+      border-color:var(--brand);
+    }
+
+    .btn-primary{
+      background-color:var(--brand);
+      transition:background-color .2s;
+    }
+    .btn-primary:hover{ background-color:#0958d9; }
+
+    .hero-desc{
+      line-height: 1.9;
+      color: rgba(71,85,105,.95);
+    }
+
+    .chart-shell{
+      height:200px;
+      width:100%;
+      padding:12px;
+      border-radius:18px;
+      background:#FFFFFF;
+      border:1px solid var(--border);
+      box-shadow:0 14px 30px rgba(2,6,23,.04);
+      overflow:hidden;
+    }
+    .chart-fill{ width:100%; height:100%; }
+
+    /* ================= 用研（舆情）必须“字不遮挡/不裁切” ================= */
+    .insight-shell{
+      width:100%;
+      padding:12px;
+      border-radius:18px;
+      background:#FFFFFF;
+      border:1px solid var(--border);
+      box-shadow:0 14px 30px rgba(2,6,23,.04);
+      overflow: visible;
+    }
+    .insight-layout{
+      display:grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap:12px;
+      align-items:stretch;
+    }
+
+    .insight-title-sm{
+      font-size:11px;
+      white-space:nowrap;
+    }
+
+    .insight-main{
+      border-radius:16px;
+      min-width:0;
+      border:1px solid rgba(226,232,240,.98);
+      background: rgba(248,250,252,.98);
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      box-shadow:0 12px 24px rgba(2,6,23,.03);
+    }
+    .insight-main-title{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-weight:1000;
+      font-size:13px;
+      color:rgba(15,23,42,.92);
+    }
+    .insight-main-title i{ width:16px; height:16px; color:var(--brand); }
+
+    /* 舆情一行：点击收起/展开 */
+    .insight-fold{ margin:0; }
+    .insight-fold summary{
+      list-style:none;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .insight-fold summary::-webkit-details-marker{ display:none; }
+    .insight-fold summary::after{
+      content:'';
+      width:0; height:0;
+      margin-left:auto;
+      border-left:5px solid transparent;
+      border-right:5px solid transparent;
+      border-top:6px solid #64748b;
+      transition:transform .2s ease;
+    }
+    .insight-fold[open] summary::after{ transform:rotate(180deg); }
+
+    .insight-main-list{
+      display:grid;
+      gap:8px;
+    }
+
+    .insight-item{
+      display:flex;
+      align-items:flex-start;
+      gap:8px;
+      padding:10px 10px;
+      border-radius:14px;
+      background:#fff;
+      border:1px solid rgba(226,232,240,.98);
+      box-shadow:0 10px 18px rgba(2,6,23,.03);
+      font-size:12px;
+      font-weight:900;
+      color:rgba(30,41,59,.88);
+      line-height:1.35;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+    }
+    .insight-item i{ width:16px; height:16px; color:var(--brand); flex:0 0 auto; margin-top:1px; }
+
+    .insight-right{
+      border-radius:16px;
+      border:1px solid rgba(226,232,240,.98);
+      background: rgba(248,250,252,.98);
+      padding:12px;
+      box-shadow:0 12px 24px rgba(2,6,23,.03);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .insight-right-head{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .insight-right-ico{
+      width:36px;height:36px;
+      border-radius:14px;
+      background: rgba(22,119,255,.10);
+      border:1px solid rgba(22,119,255,.14);
+      display:flex;align-items:center;justify-content:center;
+      flex:0 0 auto;
+    }
+    .insight-right-ico i{ width:18px;height:18px;color:var(--brand); }
+    .insight-right-title{
+      font-weight:1000;
+      font-size:13px;
+      color:rgba(15,23,42,.92);
+      line-height:1.2;
+    }
+    .insight-right-sub{
+      margin-top:4px;
+      font-size:11px;
+      font-weight:800;
+      color:rgba(100,116,139,.95);
+      line-height:1.35;
+      white-space:normal;
+    }
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:2px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid rgba(226,232,240,.98);
+      box-shadow:0 10px 18px rgba(2,6,23,.03);
+      font-size:11px;
+      font-weight:900;
+      color:rgba(15,23,42,.80);
+      white-space:nowrap;
+    }
+    .chip i{ width:14px;height:14px;color:var(--brand); }
+
+    /* ================= 区块可折叠 ================= */
+    .section-collapse{ border-radius:12px; }
+    .section-collapse summary{
+      list-style:none;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:4px 0;
+      font-size:1.25rem;
+      font-weight:900;
+      color:#0f172a;
+    }
+    .section-collapse summary::-webkit-details-marker{ display:none; }
+    .section-collapse summary::after{
+      content:'';
+      width:0; height:0;
+      border-left:6px solid transparent;
+      border-right:6px solid transparent;
+      border-top:8px solid #64748b;
+      margin-left:auto;
+      transition:transform .25s ease;
+    }
+    .section-collapse[open] summary::after{ transform:rotate(180deg); }
+    .section-collapse .section-note{ font-size:0.875rem; color:#64748b; margin-top:4px; }
+
+    /* ================= 宣推 Pipeline ================= */
+    .pipeline-shell{
+      height:200px;
+      width:100%;
+      padding:12px;
+      border-radius:18px;
+      background:#FFFFFF;
+      border:1px solid var(--border);
+      box-shadow:0 14px 30px rgba(2,6,23,.04);
+      overflow:hidden;
+      position:relative;
+    }
+    .pipeline-bg{
+      position:absolute; inset:-40px;
+      background:
+        radial-gradient(closest-side, rgba(22,119,255,.12), transparent 70%),
+        radial-gradient(closest-side, rgba(236,72,153,.10), transparent 65%),
+        radial-gradient(closest-side, rgba(16,185,129,.10), transparent 70%);
+      opacity:.9;
+    }
+
+    .pipeline-steps{
+      position:relative;
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:8px;
+    }
+
+    .step{
+      background: rgba(255,255,255,.92);
+      border:1px solid rgba(226,232,240,.98);
+      border-radius:16px;
+      padding:10px 12px;
+      box-shadow:0 14px 22px rgba(2,6,23,.05);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      min-width:0;
+    }
+
+    .step-ico{
+      width:32px;height:32px;
+      border-radius:14px;
+      background: rgba(22,119,255,.10);
+      border:1px solid rgba(22,119,255,.14);
+      display:flex;align-items:center;justify-content:center;
+      flex:0 0 auto;
+      position:relative;
+    }
+    .step-ico i{ width:18px;height:18px;color:var(--brand); }
+
+    .ico-stack{
+      position:relative;
+      width:18px;
+      height:18px;
+      display:block;
+    }
+    .ico-stack svg{
+      position:absolute;
+      left:0; top:0;
+      width:18px; height:18px;
+      color:var(--brand);
+    }
+    .ico-stack .badge{
+      position:absolute;
+      left:10px; top:10px;
+      width:12px; height:12px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid rgba(22,119,255,.22);
+      box-shadow:0 8px 16px rgba(2,6,23,.08);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .ico-stack .badge svg{
+      position:static;
+      width:10px; height:10px;
+      color:var(--brand);
+    }
+
+    .step-text{ min-width:0; }
+    .step-title{
+      font-size:13px;
+      font-weight:1000;
+      color:rgba(15,23,42,.92);
+      line-height:1.2;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .step-sub{
+      margin-top:3px;
+      font-size:10px;
+      font-weight:800;
+      color:rgba(100,116,139,.95);
+      line-height:1.35;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .arrow{
+      align-self:center;
+      width:26px;height:26px;
+      border-radius:999px;
+      background: rgba(15,23,42,.04);
+      border:1px solid rgba(226,232,240,.9);
+      box-shadow:0 10px 18px rgba(2,6,23,.03);
+      display:flex;align-items:center;justify-content:center;
+    }
+    .arrow i{ width:16px;height:16px;color:rgba(37,99,235,.8); }
+
+    /* ================= 客服 / 标签 / 水印 ================= */
+    .service-subcard{
+      background:#fff;
+      border:1px solid rgba(226,232,240,1);
+      border-radius:18px;
+      padding:16px;
+      transition: all .2s;
+    }
+    .service-subcard:hover{
+      border-color: rgba(22,119,255,.45);
+      box-shadow:0 14px 26px rgba(2,6,23,.05);
+      transform: translateY(-2px);
+    }
+
+    .mini-shell{
+      height:160px;
+      width:100%;
+      padding:10px;
+      border-radius:18px;
+      background:#FFFFFF;
+      border:1px solid rgba(226,232,240,1);
+      box-shadow:0 12px 24px rgba(2,6,23,.04);
+      overflow:hidden;
+    }
+    .mini-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .mini-left{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width:0;
+      flex-wrap:wrap;
+    }
+    .mini-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:4px 8px;
+      border-radius:999px;
+      background:rgba(248,250,252,.98);
+      border:1px solid rgba(226,232,240,.95);
+      font-size:10px;
+      font-weight:1000;
+      color:rgba(15,23,42,.72);
+      white-space:nowrap;
+    }
+    .mini-tags{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      justify-content:flex-end;
+    }
+
+    .chat{
+      height: calc(100% - 34px);
+      border-radius:14px;
+      background:rgba(248,250,252,.95);
+      border:1px solid rgba(226,232,240,.95);
+      padding:10px;
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .msg-row{ display:flex; }
+    .msg{
+      max-width:84%;
+      padding:8px 10px;
+      border-radius:14px;
+      font-size:11px;
+      font-weight:900;
+      line-height:1.5;
+      border:1px solid rgba(226,232,240,.95);
+      box-shadow:0 10px 18px rgba(2,6,23,.03);
+    }
+    .msg.user{
+      margin-left:auto;
+      background:#fff;
+      color:rgba(15,23,42,.86);
+      border-top-right-radius:6px;
+    }
+    .msg.bot{
+      margin-right:auto;
+      background:rgba(239,246,255,.78);
+      color:rgba(30,64,175,.88);
+      border-top-left-radius:6px;
+    }
+    .hint{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      font-size:10px;
+      font-weight:1000;
+      color:rgba(100,116,139,.95);
+      margin-top:auto;
+    }
+    .hint i{ width:14px; height:14px; color:var(--brand); }
+
+    .service-link{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      font-size:12px;
+      font-weight:1000;
+      color:var(--brand);
+    }
+
+    .tag-real{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      font-size:10px;
+      font-weight:1000;
+      color:#059669;
+      background:rgba(16,185,129,.10);
+      border:1px solid rgba(16,185,129,.18);
+      padding:3px 8px;
+      border-radius:999px;
+      white-space:nowrap;
+    }
+
+    .case-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:10px;
+      font-weight:1000;
+      color:rgba(15,23,42,.78);
+      background:rgba(15,23,42,.05);
+      border:1px solid rgba(148,163,184,.35);
+      padding:4px 10px;
+      border-radius:999px;
+      white-space:nowrap;
+      line-height:1;
+    }
+
+    /* 水印 */
+    .wm-wrap{
+      position:fixed;
+      right:14px;
+      bottom:14px;
+      z-index:30;
+      pointer-events:none;
+    }
+    @media (max-width: 768px){
+      .wm-wrap{ display:none; }
+    }
+
+    .wm-card{
+      display:inline-block;
+      width: fit-content;
+      max-width: min(300px, 38vw);
+      padding:12px 12px;
+      border-radius:14px;
+      background:rgba(15,23,42,.80);
+      border:1px solid rgba(148,163,184,.18);
+      box-shadow:0 18px 42px rgba(2,6,23,.18);
+      color:rgba(248,250,252,.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .wm-title{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-weight:1000;
+      font-size:13px;
+      margin-bottom:8px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      color:rgba(248,250,252,.95);
+    }
+    .wm-icon{
+      width:26px;
+      height:26px;
+      border-radius:12px;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.14);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+    }
+    .wm-text{
+      font-size:12px;
+      line-height:1.6;
+      color:rgba(226,232,240,.88);
+      font-weight:800;
+    }
+
+    /* ✅ 底部灰条可点击 */
+    .footer-pill{ pointer-events:auto; }
+    .footer-pill a{
+      pointer-events:auto;
+      color: rgba(22,119,255,.95);
+      font-weight: 900;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .footer-pill a:hover{ color:#0958d9; }
+  
+
+/* Tabs (clickable) */
+.tab-btn{
+  padding: .5rem .75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(148,163,184,.45);
+  background: rgba(255,255,255,.65);
+  font-size: .875rem;
+  color: #0f172a;
+  transition: all .15s ease;
+}
+.tab-btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.85); }
+.tab-btn.active{
+  border-color: rgba(37,99,235,.35);
+  box-shadow: 0 8px 24px rgba(37,99,235,.10);
+}
+.tab-panel.hidden{ display:none; }
+
+.soft-card{
+  border-radius: 20px;
+  background: rgba(248,250,252,.75);
+  border: 1px solid rgba(148,163,184,.30);
+}
+.mini-card{
+  border-radius: 16px;
+  padding: .85rem .9rem;
+  background: rgba(255,255,255,.75);
+  border: 1px solid rgba(148,163,184,.28);
+}
+.hint{
+  border-radius: 16px;
+  padding: .75rem .9rem;
+  background: rgba(59,130,246,.06);
+  border: 1px solid rgba(59,130,246,.18);
+  color: #0f172a;
+  font-size: .875rem;
+}
+</style>
+</head>
+<body class="min-h-screen pb-32">
+<nav class="sticky top-0 z-50 w-full px-4 md:px-8 py-4 bg-white/90 backdrop-blur-md border-b border-slate-200/50">
+<div class="max-w-7xl mx-auto flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-[#1677FF] rounded-xl flex items-center justify-center shadow-lg shadow-blue-100">
+<i class="text-white w-6 h-6" data-lucide="sparkles"></i>
+</div>
+<div>
+<span class="text-xl font-bold text-slate-900 block">User Growth & Consumer Insight Tool Agent</span>
+<span class="text-[10px] text-slate-400 tracking-widest font-medium">Merchant GTM Operating System</span>
+</div>
+</div>
+<div class="hidden md:flex items-center gap-6">
+<div class="flex flex-col items-end">
+<span class="text-xs font-bold text-slate-700">Agent 控制中心</span>
+<span class="text-[10px] text-emerald-500 flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> 系统运行中
+          </span>
+</div>
+</div>
+</div>
+</nav>
+  <main class="max-w-7xl mx-auto px-4 md:px-8 pt-10 md:pt-16 flex flex-col gap-6">
+<div class="mb-14 order-1">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+<div>
+<h1 class="text-4xl font-black text-slate-900 tracking-tight">广告主用户洞察及用增策略Agent - 子模块功能集 </h1>
+<p class="mt-3 text-slate-500 font-bold flex items-center gap-2">
+<i class="w-4 h-4 text-blue-600" data-lucide="target"></i>
+            专注于从 <span class="text-blue-600">钱效</span> 及 <span class="text-blue-600">人效</span> 维度助力广告主提升经营效率
+          </p>
+<!-- Agent Architecture Summary (for interviewer) -->
+<div class="mt-6 rounded-3xl bg-white border border-slate-200 shadow-sm p-5">
+<div class="flex items-center justify-between gap-4">
+<div class="text-sm font-black text-slate-900 flex items-center gap-2">
+<i class="w-4 h-4 text-indigo-700" data-lucide="cpu"></i>
+                Agent 架构设计（摘要）
+              </div>
+<a class="text-xs font-black text-indigo-700 hover:underline" href="#agent-arch">查看详情 →</a>
+</div>
+<div class="mt-3 grid gap-3 grid-cols-2 md:grid-cols-4">
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+<div class="text-xs font-black text-slate-900">Intent</div>
+<div class="mt-1 text-xs text-slate-600 font-bold">澄清口径/约束→输出结构化任务单(Schema)</div>
+</div>
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+<div class="text-xs font-black text-slate-900">Plan</div>
+<div class="mt-1 text-xs text-slate-600 font-bold">拆分子任务 → 选择工具与验收标准</div>
+</div>
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+<div class="text-xs font-black text-slate-900">Act (Tools)</div>
+<div class="mt-1 text-xs text-slate-600 font-bold">RAG/SQL/评测/生成/投放/归因→记录追溯日志</div>
+</div>
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+<div class="text-xs font-black text-slate-900">Verify &amp; Learn</div>
+<div class="mt-1 text-xs text-slate-600 font-bold">Schema校验/多候选/人工确认→Bad Case调优</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="glass-card rounded-3xl p-6 md:p-8 order-3">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+<div class="hidden md:block absolute top-1/2 left-[30%] right-[30%] h-[2px] bg-gradient-to-r from-blue-100 via-blue-400 to-emerald-100 -z-10"></div>
+<!-- 用户洞察（沿用现有 glass-card 体系） -->
+<div class="glass-card rounded-3xl p-6 shadow-sm flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 border border-blue-100">
+<i class="text-blue-600 w-6 h-6" data-lucide="search"></i>
+</div>
+<h4 class="font-black text-slate-900 mb-2">用户洞察</h4>
+<p class="text-xs text-slate-500 leading-relaxed font-extrabold">
+            用户洞察：全网舆情与用户需求深度解码，为投放素材与策略提供精准锚点。
+          </p>
+</div>
+<!-- AIGC 闭环进化（核心引擎突出） -->
+<div class="rounded-3xl p-6 shadow-xl flex flex-col items-center text-center relative overflow-hidden group border border-slate-700 bg-slate-900">
+<div class="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-transparent opacity-60"></div>
+<div class="relative z-10">
+<div class="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center mb-4 mx-auto shadow-lg shadow-blue-500/40">
+<i class="text-white w-6 h-6" data-lucide="cpu"></i>
+</div>
+<h4 class="font-black text-white mb-2 text-lg">AIGC 闭环进化</h4>
+<div class="flex flex-wrap justify-center gap-2 mt-3">
+<span class="text-[10px] px-2 py-1 bg-slate-800 text-blue-200 rounded-md border border-slate-700 leading-none font-black">推广素材子模块解耦</span>
+<span class="text-[10px] px-2 py-1 bg-slate-800 text-blue-200 rounded-md border border-slate-700 leading-none font-black">组合生成评测集</span>
+<span class="text-[10px] px-2 py-1 bg-slate-800 text-blue-200 rounded-md border border-slate-700 leading-none font-black">本地模型先验打分</span>
+<span class="text-[10px] px-2 py-1 bg-slate-800 text-blue-200 rounded-md border border-slate-700 leading-none font-black">小流量后验证测试</span>
+</div>
+<p class="text-[11px] text-slate-300 mt-4 leading-relaxed font-extrabold">
+              通过用户洞察 + AIGC（推广素材子模块解耦+组合生成评测集+本地模型先验打分+小流量后验证测试）
+            </p>
+</div>
+</div>
+<!-- 端内反哺优化（沿用现有 glass-card 体系） -->
+<div class="glass-card rounded-3xl p-6 shadow-sm flex flex-col items-center text-center">
+<div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center mb-4 border border-emerald-100">
+<i class="text-emerald-600 w-6 h-6" data-lucide="refresh-ccw"></i>
+</div>
+<h4 class="font-black text-slate-900 mb-2">端内反哺优化</h4>
+<p class="text-xs text-slate-600 font-black whitespace-nowrap mt-2 py-2 px-3 rounded-lg bg-blue-50/80 border-b-2 border-blue-200 inline-block">
+            活跃+交易行为数据     +     合理归因
+          </p>
+<p class="text-[11px] text-slate-500 mt-3 leading-relaxed font-extrabold">
+            端内反哺模型效果优化（活跃交易行为数据+合理归因），持续提升模型与策略质量。
+          </p>
+</div>
+</div>
+<div class="mt-4 flex flex-nowrap items-center justify-center gap-x-4 md:gap-x-6 py-2.5 border-y border-slate-200/60 bg-slate-50/50 rounded-xl overflow-x-auto">
+<div class="flex items-center gap-2 shrink-0">
+<i class="w-4 h-4 text-blue-600" data-lucide="check-circle-2"></i>
+<span class="text-xs font-black text-slate-700">提升决策科学性</span>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<i class="w-4 h-4 text-blue-600" data-lucide="check-circle-2"></i>
+<span class="text-xs font-black text-slate-700">降低高价值用户获取及培养成本</span>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<i class="w-4 h-4 text-blue-600" data-lucide="check-circle-2"></i>
+<span class="text-xs font-black text-slate-700">提高获客效率</span>
+</div>
+<span class="shrink-0 text-[11px] text-slate-500 font-extrabold whitespace-nowrap ml-1">助力广告主提升投放物料及预算调整策略的决策科学性，降低高价值用户获取及培养成本，提高获客效率。</span>
+</div>
+<div class="mt-2 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 py-2 border border-blue-200/70 bg-blue-50/50 rounded-xl">
+  <div class="flex items-center gap-2">
+    <i class="w-4 h-4 text-blue-600" data-lucide="check-circle-2"></i>
+    <span class="text-xs font-black text-slate-700">人：目标制定、埋点维护、口径定义、关键内容审核批复、结果验收</span>
+  </div>
+  <div class="flex items-center gap-2">
+    <i class="w-4 h-4 text-blue-600" data-lucide="check-circle-2"></i>
+    <span class="text-xs font-black text-slate-700">Agent：调用工具、生成与执行</span>
+  </div>
+  <div class="flex items-center gap-2">
+    <i class="w-4 h-4 text-blue-600" data-lucide="check-circle-2"></i>
+    <span class="text-xs font-black text-slate-700">系统：校验、权限、审计，记录操作日志，确保可追溯可回滚</span>
+  </div>
+</div>
+
+</div>
+</div>
+<section class="max-w-7xl mx-auto px-4 md:px-8 mt-0 mb-4 order-5" id="positioning">
+<div class="glass-card p-6 md:p-7">
+<div class="flex items-start justify-between gap-4 flex-wrap">
+<div>
+<h2 class="text-2xl md:text-3xl font-bold tracking-tight">通过意图识别及时序推理及工具调用进行因果优化</h2>
+<p class="mt-2 text-slate-600 text-sm md:text-base">
+          通过多轮对话和槽位填充，进行用户目标意图识别，筛选口径，自动完成洞察—生成—验证—回灌闭环，并保留可审计与可回滚。
+        </p>
+</div>
+</div>
+<div class="mt-5">
+<div class="tab-panel" id="tab-toolagent">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="soft-card p-5">
+<h3 class="font-semibold">Target User</h3>
+<p class="mt-2 text-sm text-slate-600">
+              面向“投放 / 增长运营 / 数据分析”等专业用户，把可重复的UG工作<strong>封装成闭环</strong>：输入口径 → 调用工具 → 校验结果 → 复盘回灌。
+            </p>
+</div>
+<div class="soft-card p-5">
+<h3 class="font-semibold">边界与权限</h3>
+<ul class="mt-2 text-sm text-slate-600 list-disc pl-5 space-y-1">
+<li>高风险动作（上线投放 / 改预算 / 改归因口径）默认需要人工确认</li>
+<li>输出必须结构化（JSON / 表格 / 指标口径）并可追溯来源</li>
+<li>失败可回滚：保留候选、日志与 Bad case</li>
+</ul>
+</div>
+<div class="soft-card p-5">
+<h3 class="font-semibold">不足与展望</h3>
+<p class="mt-2 text-sm text-slate-600">
+当前形态为<strong>AI-Enhanced</strong>，期待后续加入<strong>AI Naitive</strong>团队进一步完善细化并进行体验及性能调优。
+            </p>
+<div class="mt-3 text-xs text-slate-500">
+            </div>
+</div>
+</div>
+</div>
+<div class="tab-panel hidden" id="tab-tools">
+<div class="soft-card p-5">
+<h3 class="font-semibold">Agent Tools（工具箱）</h3>
+<div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-600">
+<div>
+<div class="font-medium text-slate-700">数据</div>
+<ul class="mt-1 list-disc pl-5 space-y-1">
+<li>SQL 生成 / 执行 / 口径校验</li>
+<li>报表与可视化生成（指标对齐）</li>
+<li>归因映射：creative_id → 变体特征 → 结果</li>
+</ul>
+</div>
+<div>
+<div class="font-medium text-slate-700">素材</div>
+<ul class="mt-1 list-disc pl-5 space-y-1">
+<li>素材模块拆解 → 变体生成 → 先验评分</li>
+<li>投放编组映射与小流量验证</li>
+<li>Bad case 归档与回溯检索</li>
+</ul>
+</div>
+</div>
+<div class="mt-4 hint">
+<span class="font-medium">现状共识：</span>生产稳健性落地通常是<strong>Tool Calling + 约束/校验</strong>先把成功率做稳，再逐步放大自动化。
+          </div>
+</div>
+</div>
+<div class="tab-panel hidden" id="tab-skills">
+<div class="soft-card p-5">
+<h3 class="font-semibold">Skill Library（可复用“思考+输出模板”）</h3>
+<p class="mt-2 text-sm text-slate-600">
+            Skill 用于把“专业方法论”固化为可复用组件：口径澄清、指标拆解、洞察框架、实验解读、素材拆解等。
+          </p>
+<div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+<div class="mini-card">
+<div class="font-medium">口径澄清 Skill</div>
+<div class="mt-1 text-slate-600">时间窗 / 口径版本 / 去重与过滤规则</div>
+</div>
+<div class="mini-card">
+<div class="font-medium">指标拆解 Skill</div>
+<div class="mt-1 text-slate-600">KPI → 可观测指标 → 可行动建议</div>
+</div>
+<div class="mini-card">
+<div class="font-medium">实验解读 Skill</div>
+<div class="mt-1 text-slate-600">假设 → 对照组 → 置信度 → 结论与风险</div>
+</div>
+</div>
+<div class="mt-4 hint">
+<span class="font-medium">一线做法：</span>Skill 往往以<strong>模板 + 评测集 + 版本管理</strong>沉淀，避免每次重复写 
+Prompt。
+          </div>
+</div>
+</div>
+<div class="tab-panel hidden" id="tab-react">
+<div class="soft-card p-5">
+<h3 class="font-semibold">ReAct / Plan-Act-Reflect</h3>
+<p class="mt-2 text-sm text-slate-600">
+            在步骤不确定、需要多次试探与校验的场景，用循环把模型的不确定性锁进系统：先规划，再调用工具，基于结果校验与反思，直到满足验收标准。
+          </p>
+<div class="mt-3 grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
+<div class="mini-card"><div class="font-medium">Plan</div><div class="mt-1 text-slate-600">拆分子任务，选工具与验收标准</div></div>
+<div class="mini-card"><div class="font-medium">Act</div><div class="mt-1 text-slate-600">工具调用：SQL/RAG/评测/生成</div></div>
+<div class="mini-card"><div class="font-medium">Observe</div><div class="mt-1 text-slate-600">读取结果与日志，定位失败原因</div></div>
+<div class="mini-card"><div class="font-medium">Reflect</div><div class="mt-1 text-slate-600">修正策略，生成候选并重试</div></div>
+</div>
+<div class="mt-4 hint">
+<span class="font-medium">备注：</span>暂无demo
+
+          </div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Agent Design Section -->
+<section class="mt-2 order-6">
+<div class="rounded-3xl bg-white/70 border border-slate-200 shadow-sm p-6 md:p-8">
+<div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+<div>
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-black">
+<i class="w-4 h-4" data-lucide="bot"></i>
+<span>Agent 架构设计 / 评测 / 幻觉</span>
+</div>
+<h2 class="mt-3 text-2xl md:text-3xl font-black tracking-tight text-slate-900">
+              Agent具体细节（思考、调用、执行）
+            </h2>
+<p class="mt-2 text-sm md:text-base text-slate-600 font-bold leading-relaxed">将意图识别—规划—工具调用—结果校验—复盘学习模块解耦，部分环节调用需要 Human-in-the-loop，尽量在可控可审计前提下自动化。</p>
+</div>
+<div class="flex items-center gap-3">
+</div>
+</div>
+<!-- Architecture -->
+<div class="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-5" id="agent-arch">
+<div class="lg:col-span-7 rounded-3xl border border-slate-200 bg-white p-6">
+<h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+<i class="w-5 h-5 text-indigo-600" data-lucide="git-branch"></i>
+              Agent 架构：ReAct/Plan-Act-Reflect（可控自运行）
+            </h3>
+<p class="mt-2 text-sm text-slate-600 font-bold leading-relaxed">
+<span class="text-slate-900 font-black">ReAct</span>把模型的行为拆成：
+              <span class="text-slate-900 font-black">思考（Reason）→ 行动（Act/Tool）→ 观察（Observe）</span> 的闭环，并在关键节点做校验与拦截。
+            </p>
+<div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+<div class="flex items-center gap-2">
+<i class="w-4 h-4 text-slate-700" data-lucide="target"></i>
+<span class="text-sm font-black text-slate-900">1) 意图识别</span>
+</div>
+<ul class="mt-2 space-y-1 text-xs text-slate-600 font-bold leading-relaxed">
+<li>• 明确：目标（KPI/约束/时间窗/口径）</li>
+<li>• 反问澄清：高净值/自然日/归因口径等</li>
+<li>• 输出结构化任务单（JSON/表格）</li>
+</ul>
+</div>
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+<div class="flex items-center gap-2">
+<i class="w-4 h-4 text-slate-700" data-lucide="map"></i>
+<span class="text-sm font-black text-slate-900">2) 计划与分解</span>
+</div>
+<ul class="mt-2 space-y-1 text-xs text-slate-600 font-bold leading-relaxed">
+<li>• 把任务拆成可调用的子任务</li>
+<li>• 选择工具：RAG/SQL/评测/生成/投放</li>
+<li>• 明确每一步“验收标准”</li>
+</ul>
+</div>
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+<div class="flex items-center gap-2">
+<i class="w-4 h-4 text-slate-700" data-lucide="wrench"></i>
+<span class="text-sm font-black text-slate-900">3) 工具调用</span>
+</div>
+<ul class="mt-2 space-y-1 text-xs text-slate-600 font-bold leading-relaxed">
+<li>• 用 MCP/Tool API 调用稳定组件</li>
+<li>• 关键动作记录：输入/输出/版本</li>
+<li>• 失败重试：多路径查询/多SQL候选</li>
+</ul>
+</div>
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+<div class="flex items-center gap-2">
+<i class="w-4 h-4 text-slate-700" data-lucide="refresh-ccw"></i>
+<span class="text-sm font-black text-slate-900">4) 反思与学习</span>
+</div>
+<ul class="mt-2 space-y-1 text-xs text-slate-600 font-bold leading-relaxed">
+<li>• Bad case 归因：口径/字段/工具/数据质量</li>
+<li>• 形成规则/模板/提示词补丁</li>
+<li>• 持续评测集回灌（先验+后验）</li>
+</ul>
+</div>
+</div>
+<div class="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
+<div class="flex items-start gap-3">
+<i class="w-5 h-5 text-indigo-700 mt-0.5" data-lucide="sparkles"></i>
+<div>
+<div class="text-sm font-black text-indigo-900">Agent输出结果如何提高准确性</div>
+<p class="mt-1 text-xs text-indigo-800 font-bold leading-relaxed">
+                    把“模型的概率性”根据环节解耦为子模块，方便定位问题，提高系统可控性。通过：结构化输入+工具边界+校验与回灌</span> 提升业务目标实现准确率。
+                  </p>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-5 space-y-4">
+<div class="rounded-3xl border border-slate-200 bg-white p-3">
+<h3 class="text-lg font-black text-slate-900 flex items-center gap-2">其他备注：Agent vs Workflow</h3>
+<div class="mt-1 space-y-1 text-xs text-slate-700 font-bold leading-relaxed">
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-2">
+<div class="font-black text-slate-900">Workflow</div>
+<div class="mt-1">固定路径、强确定性；适合“已知步骤”的稳定流程。</div>
+</div>
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-2">
+<div class="font-black text-slate-900">Agent</div>
+<div class="mt-1">可根据上下文动态选择路径与工具；适合“步骤不确定”的复杂任务，但必须有校验与边界。</div>
+</div>
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-2">
+<div class="font-black text-slate-900">实践落点</div>
+<div class="mt-1">通常是 “Workflow 承载主干 + Agent 处理分叉/生成/探索”。</div>
+</div>
+</div>
+</div>
+<div class="rounded-3xl border border-slate-200 bg-white p-6">
+<h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+<i class="w-5 h-5 text-emerald-600" data-lucide="database"></i>
+                RAG / Memory（给业务上下文“通电”）
+              </h3>
+<p class="mt-2 text-sm text-slate-600 leading-relaxed">
+                在语料切块+相似度基础上：根据目标设阈值，分段去重、把口径/版本/权限做成过滤条件、召回物料根据业务规则重排序，通过Query分类去校验优化。
+              </p>
+<ul class="mt-3 space-y-2 text-xs text-slate-700 font-bold leading-relaxed">
+<li class="flex gap-2"><i class="w-4 h-4 text-emerald-600 mt-0.5" data-lucide="dot"></i>为“数据口径/字段映射/投放规则”建立可版本化知识库</li>
+<li class="flex gap-2"><i class="w-4 h-4 text-emerald-600 mt-0.5" data-lucide="dot"></i>对关键答案强制引用来源（可追溯）</li>
+<li class="flex gap-2"><i class="w-4 h-4 text-emerald-600 mt-0.5" data-lucide="dot"></i>召回失败的兜底：多查询改写、多路召回、人工补充</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Evaluation & Guardrails -->
+<div class="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-5">
+<div class="lg:col-span-7 rounded-3xl border border-slate-200 bg-white p-6" id="agent-eval">
+<h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+<i class="w-5 h-5 text-purple-600" data-lucide="bar-chart-3"></i>
+              评测体系：先验评分 + 后验回灌
+            </h3>
+<p class="mt-2 text-sm text-slate-600 font-bold leading-relaxed">
+              把“模型好不好”拆成可量化指标：<span class="text-slate-900 font-black">正确性</span>、<span class="text-slate-900 font-black">可解释</span>、<span class="text-slate-900 font-black">稳定性</span>、<span class="text-slate-900 font-black">成本/时延</span>、<span class="text-slate-900 font-black">业务增量</span>。
+            </p>
+<div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+<div class="text-sm font-black text-slate-900 flex items-center gap-2">
+<i class="w-4 h-4 text-purple-600" data-lucide="clipboard-check"></i>
+                  先验（Offline）
+                </div>
+<ul class="mt-2 space-y-1 text-xs text-slate-600 font-bold leading-relaxed">
+<li>• 结构化评测集（场景用户需求/动机）</li>
+<li>• Likewise/Pairwise/Listwise 排序一致性</li>
+<li>• Prompt/模型版本对比回归</li>
+</ul>
+</div>
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+<div class="text-sm font-black text-slate-900 flex items-center gap-2">
+<i class="w-4 h-4 text-purple-600" data-lucide="rocket"></i>
+                  后验（Online）
+                </div>
+<ul class="mt-2 space-y-1 text-xs text-slate-600 font-bold leading-relaxed">
+<li>• 小流量 A/B：CTR、CVR、CPA、LTV</li>
+<li>• 归因映射：Creative_id ↔ 变体特征</li>
+<li>• Bad
+   case 自动归档 → 反哺知识库</li>
+</ul>
+</div>
+</div>
+<div class="mt-5 rounded-2xl border border-purple-100 bg-purple-50 p-4">
+<div class="flex items-start gap-3">
+<i class="w-5 h-5 text-purple-700 mt-0.5" data-lucide="telescope"></i>
+<div>
+<div class="text-sm font-black text-purple-900">一句话总结</div>
+<p class="mt-1 text-xs text-purple-800 font-bold leading-relaxed">
+                    Agent评测闭环：子元素解耦标签组合，先验打分筛候选，小流量后验，再把结果回灌至模型/提示词/知识库，PDCA持续优化。
+                  </p>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-5 rounded-3xl border border-slate-200 bg-white p-6" id="agent-guard">
+<h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+<i class="w-5 h-5 text-rose-600" data-lucide="shield"></i>
+              幻觉与安全：把“不确定”锁在系统里
+            </h3>
+<ul class="mt-2 space-y-2 text-xs text-slate-700 font-bold leading-relaxed">
+<li class="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+<div class="font-black text-slate-900 flex items-center gap-2">
+<i class="w-4 h-4 text-rose-600" data-lucide="check"></i>
+                  结构化输出 + 校验器
+                </div>
+<div class="mt-1">JSON schema / SQL linter / 指标口径校验，失败即回退重试。</div>
+</li>
+<li class="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+<div class="font-black text-slate-900 flex items-center gap-2">
+<i class="w-4 h-4 text-rose-600" data-lucide="check"></i>
+                  多候选 + 交叉验证
+                </div>
+<div class="mt-1">同一意图生成多条候选（多SQL/多脚本），用规则/评测器选最优。</div>
+</li>
+<li class="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+<div class="font-black text-slate-900 flex items-center gap-2">
+<i class="w-4 h-4 text-rose-600" data-lucide="check"></i>
+                  Human-in-the-loop
+                </div>
+<div class="mt-1">高风险动作（上线投放/改预算/写库）必须人工确认与回滚。</div>
+</li>
+<li class="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+<div class="font-black text-slate-900 flex items-center gap-2">
+<i class="w-4 h-4 text-rose-600" data-lucide="check"></i>
+                  最小权限与审计
+                </div>
+<div class="mt-1">工具按角色授权，所有调用可追溯（输入/输出/版本/操作者）。</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+<!-- Roadmap (kept here but text updated, visual roadmap moved to separate section before AIGC) -->
+<div class="mt-8 rounded-3xl border border-slate-200 bg-white p-6 hidden">
+<h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+<i class="w-5 h-5 text-slate-800" data-lucide="route"></i>
+            Agent 化路线图
+          </h3>
+<div class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+<div class="text-xs font-black text-slate-900">V0.8（当前）</div>
+<div class="mt-1 text-xs text-slate-600 font-bold">模块解耦 + 表格评测 + 人工串联</div>
+</div>
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+<div class="text-xs font-black text-slate-900">V1.0</div>
+<div class="mt-1 text-xs text-slate-600 font-bold">统一任务单（schema）+工具接口+失败重试</div>
+</div>
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+<div class="text-xs font-black text-slate-900">V1.5</div>
+<div class="mt-1 text-xs text-slate-600 font-bold">RAG/口径知识库+引用校验+Bad Case回灌</div>
+</div>
+<div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+<div class="text-xs font-black text-slate-900">V2.0</div>
+<div class="mt-1 text-xs text-slate-600 font-bold">多Agent协作(洞察生成/投放归因)+权限审计</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Agent Roadmap (独立模块，放在 AIGC 上方) -->
+<section class="order-2 -mt-4">
+  <div class="rounded-3xl border border-slate-200 bg-white p-5 md:p-6">
+    <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+      <i class="w-5 h-5 text-slate-800" data-lucide="route"></i>
+      Agent 化路线图
+    </h3>
+    <div class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+        <div class="text-xs font-black text-slate-900">V0.8（当前）</div>
+        <div class="mt-1 text-xs text-slate-600 font-bold">模块解耦 + 表格评测 + 人工串联</div>
+      </div>
+      <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+        <div class="text-xs font-black text-slate-900">V1.0</div>
+        <div class="mt-1 text-xs text-slate-600 font-bold">统一任务单（schema）+工具接口+失败重试</div>
+      </div>
+      <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+        <div class="text-xs font-black text-slate-900">V1.5</div>
+        <div class="mt-1 text-xs text-slate-600 font-bold">RAG/口径知识库+引用校验+Bad Case回灌</div>
+      </div>
+      <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+        <div class="text-xs font-black text-slate-900">V2.0</div>
+        <div class="mt-1 text-xs text-slate-600 font-bold">多Agent协作(洞察生成/投放归因)+权限审计</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="flex flex-col gap-8 order-3">
+<!-- AI应用：多模态内容生成及反馈评测调优（与数据分析、用户研究同级） -->
+<details class="col-span-full section-collapse order-1" open="">
+<summary>AI应用：多模态内容生成及反馈评测调优</summary>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-4">
+
+<!-- AIGC 模块：Embodied AI Interaction Demo（Human-in-the-loop） -->
+<div class="glass-card rounded-3xl p-8 flex flex-col lg:col-span-1">
+  <div class="flex justify-between items-start mb-5">
+    <div>
+      <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded">AIGC · MULTIMODAL</span>
+<h3 class="text-xl font-bold mt-2">Dance Flow：AI Interaction（Human-in-the-loop）</h3>
+    </div>
+    <i class="text-indigo-500 w-6 h-6" data-lucide="camera"></i>
+  </div>
+
+  <div class="mini-shell mb-4">
+    <div class="mini-top">
+      <div class="mini-left">
+        <span class="mini-pill"><i class="w-3 h-3" data-lucide="video"></i>参考视频</span>
+        <span class="mini-pill"><i class="w-3 h-3" data-lucide="camera"></i>摄像头</span>
+        <span class="mini-pill"><i class="w-3 h-3" data-lucide="scan"></i>Pose</span>
+        <span class="mini-pill"><i class="w-3 h-3" data-lucide="sparkles"></i>Gemini</span>
+      </div>
+      <div class="mini-tags">
+        <span class="mini-pill"><i class="w-3 h-3" data-lucide="badge-check"></i>实时反馈</span>
+      </div>
+    </div>
+
+    <div class="chat">
+      <div class="msg-row"><div class="msg user">我想学这支舞，但跟不上节奏…</div></div>
+      <div class="msg-row"><div class="msg bot">识别偏差：右臂角度不足 → 建议 0.75× + 重复 3 次。</div></div>
+    </div>
+  </div>
+
+  <p class="text-sm text-slate-500 mb-4 leading-relaxed">
+    <strong>Dance Flow</strong>：上传舞蹈视频提取 <span class="font-bold text-slate-700">骨架</span>，摄像头校准动作并 <span class="font-bold text-slate-700">打分</span>；
+    <span class="font-bold text-slate-700">Gemini</span> 输出优化与练习建议。
+  </p>
+
+  <div class="text-xs text-slate-600 font-bold leading-relaxed mb-6">
+    <span class="inline-flex items-center gap-2">
+      <i class="w-4 h-4 text-indigo-600" data-lucide="route"></i>
+      <span>关键闭环：</span>
+    </span>
+    <span class="ml-1">参考视频抽帧（0.1s）→ 摄像头姿态对齐 → 相似度评分 → 自适应降速 → 复盘建议</span>
+  </div>
+
+  <a class="mt-auto btn-primary text-white py-3 rounded-2xl text-center font-bold text-sm shadow-md" href="https://dance-ai.pages.dev" rel="noopener" target="_blank">
+    Google Hackthon Team Project Devpost
+  </a>
+</div>
+
+
+<!-- AIGC 模块：AI玄学（人生K线推演） -->
+<div class="glass-card rounded-3xl p-8 flex flex-col lg:col-span-1">
+  <div class="flex justify-between items-start mb-5">
+    <div>
+      <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded">AIGC · VISION</span>
+      <h3 class="text-xl font-bold mt-2">What If：通过时序记录内容进行因果建模，通过生态位决策推演帮用户优化行动</h3>
+    </div>
+    <i class="text-emerald-600 w-6 h-6" data-lucide="home"></i>
+  </div>
+
+  <div class="mini-shell mb-4">
+    <div class="mini-top">
+      <div class="mini-left">
+        <span class="mini-pill"><i class="w-3 h-3" data-lucide="calendar"></i>老黄历/星盘</span>
+        <span class="mini-pill"><i class="w-3 h-3" data-lucide="file-text"></i>关键要事</span>
+      </div>
+      <div class="mini-tags">
+        <span class="mini-pill"><i class="w-3 h-3" data-lucide="shield-alert"></i>敏感题材</span>
+      </div>
+    </div>
+
+    <div class="chat">
+      <div class="msg-row"><div class="msg user">最近在纠结事业/感情/城市选择，总感觉走错一步就完了…</div></div>
+      <div class="msg-row"><div class="msg bot">先别急，我们先把关键节点一条条标出来，用“人生K线”看整个走势，再用占星/八字看当下是蓄力期还是转折点。</div></div>
+    </div>
+  </div>
+
+  <p class="text-sm text-slate-500 mb-4 leading-relaxed">
+    以日历备忘录+星座老黄历形式引导用户记录日常，通过用户输入分析过去，理解用户生态位及真实动机/情绪点，帮用户进行目标校准，在未来通过行动释怀。
+    以围棋局势为隐喻，后续语料丰富后基于时序进行因果建模，帮用户做角色身份模拟与推演。
+  </p>
+
+  <div class="mt-auto flex flex-col gap-3">
+    <a
+      href="https://matrixmirix-whatif.pages.dev/"
+      target="_blank"
+      rel="noopener"
+      class="w-full py-2 rounded-2xl text-center font-bold text-sm shadow-md btn-primary text-white hover:bg-[#0958d9] transition"
+    >
+      通过人生K线+AI玄学+关键要事帮用户推演反内耗
+    </a>
+
+    <button class="w-full py-2 rounded-2xl text-center font-bold text-sm shadow-md bg-slate-200 text-slate-400 border border-slate-200 cursor-not-allowed" type="button" disabled>
+      AI风水已下线，教育游戏化AI沉浸互动工具待整理
+    </button>
+  </div>
+</div>
+<!-- AIGC 模块：宣推营销物料 Pipeline -->
+<div class="glass-card rounded-3xl p-8 flex flex-col lg:col-span-1">
+  <div class="flex justify-between items-start mb-6">
+  <div>
+  <span class="text-[10px] font-bold text-pink-600 uppercase tracking-widest bg-pink-50 px-2 py-1 rounded">Creative</span>
+  <h3 class="text-xl font-bold mt-2">场景化策略与先后验评测资产库</h3>
+</div>
+<i class="text-pink-500 w-6 h-6" data-lucide="clapperboard"></i>
+</div>
+<div class="pipeline-shell">
+<div class="pipeline-bg"></div>
+<div class="pipeline-steps">
+<div class="step">
+<div class="step-ico"><i data-lucide="sparkles"></i></div>
+<div class="step-text">
+<div class="step-title">舆情洞察</div>
+<div class="step-sub">抓取热词 / 投诉点 / 口碑波动</div>
+</div>
+</div>
+<div class="arrow"><i data-lucide="chevron-down"></i></div>
+<div class="step">
+<div class="step-ico">
+<span class="ico-stack">
+<i data-lucide="user-round"></i>
+<span class="badge"><i data-lucide="search"></i></span>
+</span>
+</div>
+<div class="step-text">
+<div class="step-title">用户调研</div>
+<div class="step-sub">问卷 / 访谈 / 分层画像 → 场景用户需求/人群动机</div>
+</div>
+</div>
+<div class="arrow"><i data-lucide="chevron-down"></i></div>
+<div class="step">
+<div class="step-ico"><i data-lucide="library"></i></div>
+<div class="step-text">
+<div class="step-title">GTM策略洞察库</div>
+<div class="step-sub"> 子元素解耦 / 标签化重组 / 评测集生成 / 先验测试+后验校准</div>
+</div>
+</div>
+<div class="arrow"><i data-lucide="chevron-down"></i></div>
+<div class="step">
+<div class="step-ico"><i data-lucide="file-pen-line"></i></div>
+<div class="step-text">
+<div class="step-title">脚本生成</div>
+<div class="step-sub">一键生成脚本 → 多端分发</div>
+</div>
+</div>
+</div>
+</div>
+  <p class="text-sm text-slate-500 mb-4 leading-relaxed">
+    将GTM物料解耦为三部分（1）洞察（场景+用户需求/人群心理动机）（2）Hook （3）CTA行动召唤，结合业务形态（电商/休闲游戏）参考历史优质内容生成组合变体，通过先验打分+推流后验校准，为广告主沉淀优质GTM策略库。<br>
+  </p>
+  <a class="mt-auto btn-primary text-white py-3 rounded-2xl text-center font-bold text-sm shadow-md" href="https://matixmirix060202.streamlit.app/" rel="noopener" target="_blank">
+            访问洞察MECE组合看板(Streamlit休眠略慢)
+          </a>
+  </div>
+  
+
+
+</div>
+</details>
+
+</div>
+</details>
+<details class="col-span-full section-collapse order-3" open="">
+<summary>数据分析</summary>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-4">
+<!-- 1. 实验工作台 -->
+<div class="glass-card rounded-3xl p-7 flex flex-col">
+<div class="flex justify-between items-start mb-6">
+<div>
+<span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded">Operations</span>
+<h3 class="text-xl font-bold mt-2">广告主链路白盒化投放实验控制台</h3>
+</div>
+<i class="text-emerald-500 w-6 h-6" data-lucide="flask-conical"></i>
+</div>
+<div class="chart-shell">
+<div class="w-full h-full rounded-2xl border border-slate-200/70 bg-slate-50/70 p-4 flex flex-col justify-between">
+<div class="flex items-center justify-between gap-3">
+<div class="flex flex-wrap gap-2">
+<span class="mini-pill"><i class="w-3 h-3" data-lucide="play-circle"></i>运行中</span>
+<span class="mini-pill"><i class="w-3 h-3" data-lucide="shield-alert"></i>护栏</span>
+<span class="mini-pill"><i class="w-3 h-3" data-lucide="search-check"></i>诊断</span>
+</div>
+<span class="tag-real"><i class="w-3 h-3" data-lucide="check-circle-2"></i>实验平台</span>
+</div>
+<div class="mt-3 grid grid-cols-3 gap-3">
+<div class="rounded-2xl bg-white border border-slate-200/70 p-3 shadow-sm">
+<div class="text-[10px] font-black text-slate-500">总实验</div>
+<div class="mt-1 text-xl font-black text-slate-900">24</div>
+</div>
+<div class="rounded-2xl bg-white border border-slate-200/70 p-3 shadow-sm">
+<div class="text-[10px] font-black text-slate-500">关注</div>
+<div class="mt-1 text-xl font-black text-slate-900">5</div>
+</div>
+<div class="rounded-2xl bg-white border border-slate-200/70 p-3 shadow-sm">
+<div class="text-[10px] font-black text-slate-500">异常</div>
+<div class="mt-1 text-xl font-black text-rose-600">1</div>
+</div>
+</div>
+<div class="mt-3 text-[11px] font-extrabold text-slate-500 flex items-center gap-2">
+<i class="w-4 h-4 text-blue-500" data-lucide="sparkles"></i>
+              统一查看实验结果、护栏风险、瓶颈诊断与策略建议
+            </div>
+</div>
+</div>
+<p class="text-sm text-slate-500 mb-6 leading-relaxed">
+          面向 ADX/SSP/DSP 的实验工作台：指标提升、护栏波动、链路卡点与自动复盘结论统一归档。
+        </p>
+<a class="mt-auto inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-2xl text-center text-sm font-medium border border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-600 transition" href="https://adx-experiment-v2.myrawzm0406.online/" rel="noopener" target="_blank">
+          进入实验控制台
+        </a>
+<a class="mt-4 inline-flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-center font-bold text-sm shadow-md btn-primary text-white hover:bg-[#0958d9] transition" href="https://adx.mirix.myrawzm0406.online/" rel="noopener" target="_blank">
+<i class="w-4 h-4" data-lucide="external-link"></i>
+          广告主端内链路白盒化看板
+        </a>
+</div>
+<!-- 2. 自动化触达 -->
+<div class="glass-card rounded-3xl p-7 flex flex-col">
+<div class="flex justify-between items-start mb-6">
+<div>
+<span class="text-[10px] font-bold text-purple-600 uppercase tracking-widest bg-purple-50 px-2 py-1 rounded">Assets</span>
+<h3 class="text-xl font-bold mt-2">运营分析：权益自动化触达Agent</h3>
+</div>
+<i class="text-purple-500 w-6 h-6" data-lucide="layers"></i>
+</div>
+<div class="chart-shell">
+<div class="chart-fill" id="funnelContainer"></div>
+</div>
+<p class="text-sm text-slate-500 mb-8 leading-relaxed">
+          通过清洗阿里天池及Hugging Face开源数据集，基于用户旅程诊断漏斗卡点，基于生命周期优化用户分层模型，结合权益（券、积分、限时折扣、赠礼等）进行分渠道自动化触达（Push/Edm/Ad Channels）
+        </p>
+<a class="mt-auto btn-primary text-white py-3 rounded-2xl text-center font-bold text-sm shadow-md" href="https://merchant-ops-copilot.myrawzm0406.online/" rel="noopener" target="_blank">
+          优化运营策略
+        </a>
+</div>
+<!-- 3. 渠道流量 -->
+<div class="glass-card rounded-3xl p-7 flex flex-col">
+<div class="flex justify-between items-start mb-6">
+<div>
+<span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded">Operations</span>
+<h3 class="text-xl font-bold mt-2">多渠道外推广数据归因与转化分析 Dashboard</h3>
+</div>
+<i class="text-emerald-500 w-6 h-6" data-lucide="activity"></i>
+</div>
+<div class="chart-shell">
+<div class="chart-fill" id="sankeyContainer"></div>
+</div>
+<p class="text-sm text-slate-500 mb-8 leading-relaxed">
+          基于时间衰减模型的多触点归因（MTA），通过开关窗口实验与渠道询单/转化验证 AI 导购对转化率提升的增量贡献。
+        </p>
+<a class="mt-auto btn-primary text-white py-3 rounded-2xl text-center font-bold text-sm shadow-md" href="https://traffic-attribution.myrawzm0406.online/" rel="noopener" target="_blank">
+          查看外渠道归因
+        </a>
+</div>
+</div>
+</details>
+<details class="col-span-full section-collapse order-2" open="">
+<summary>Voice of Customer用户研究</summary>
+<p class="section-note">备注：定性&amp;定量调研、人因工程模块待上线</p>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-3">
+  <!-- 用研：舆情&竞品 -->
+<div class="glass-card rounded-3xl p-7 flex flex-col">
+<div class="flex justify-between items-start mb-6">
+<div>
+<span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded">Insight</span>
+<h3 class="text-xl font-bold mt-2">用研：舆情监测&amp;竞品分析</h3>
+</div>
+<div class="flex flex-col items-end gap-2">
+<span class="case-badge">真实案例</span>
+<i class="text-blue-500 w-6 h-6" data-lucide="search"></i>
+</div>
+</div>
+<div class="insight-shell">
+<div class="insight-layout">
+<details class="insight-main insight-fold" open="">
+<summary class="insight-main-title insight-title-sm" title="点击收起/展开">
+<i data-lucide="radar"></i>
+                    商用智能终端
+                  </summary>
+<div class="insight-main-list">
+<div class="insight-item"><i data-lucide="scan-eye"></i>本品牌舆情监控</div>
+<div class="insight-item"><i data-lucide="git-compare"></i>竞品机型对比</div>
+<div class="insight-item"><i data-lucide="users-round"></i>行业用户需求</div>
+</div>
+</details>
+<div class="insight-right">
+<div class="insight-right-head">
+<div class="insight-right-ico"><i data-lucide="car-front"></i></div>
+<div>
+<div class="insight-right-title">新能源车</div>
+<div class="insight-right-sub">场景热议：智驾、补能、座舱体验与口碑</div>
+</div>
+</div>
+<div class="chips">
+<span class="chip"><i data-lucide="car-front"></i>智能驾驶</span>
+<span class="chip"><i data-lucide="smartphone"></i>智能手机</span>
+<span class="chip"><i data-lucide="home"></i>其他智能家居</span>
+</div>
+</div>
+</div>
+</div>
+
+<p class="text-sm text-slate-500 mt-2 mb-1 leading-relaxed">
+  监控国内外舆情，通过 NLP 聚类关键议题，辅助产品规划与 GTM 决策。
+</p>
+<a
+  href="https://global-auto-sentiment.myrawzm0406.online/"
+  target="_blank"
+  rel="noopener"
+  class="mt-auto btn-primary text-white py-3 rounded-2xl text-center font-bold text-sm shadow-md"
+>
+  查看分析看板
+</a>
+</div>
+
+<!-- 用研：定性 + 定量分析 Agent -->
+<div class="glass-card rounded-3xl p-7 flex flex-col">
+  <div class="flex justify-between items-start mb-6">
+    <div>
+      <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-1 rounded">Insight</span>
+      <h3 class="text-xl font-bold mt-2">用研：定性 + 定量分析 Agent</h3>
+    </div>
+    <div class="flex flex-col items-end gap-2">
+      <i data-lucide="file-search" class="w-6 h-6 text-blue-500"></i>
+    </div>
+  </div>
+
+  <div class="mini-shell mb-3">
+  <div class="mini-top">
+    <div class="mini-left">
+      <span class="mini-pill"><i class="w-3 h-3" data-lucide="stethoscope"></i>预售诊断</span>
+      <span class="mini-pill"><i class="w-3 h-3" data-lucide="clipboard-list"></i>研究计划</span>
+      <span class="mini-pill"><i class="w-3 h-3" data-lucide="share-2"></i>证据链</span>
+    </div>
+    <div class="mini-tags">
+      <span class="mini-pill"><i class="w-3 h-3" data-lucide="link"></i>No Citation</span>
+      <span class="mini-pill"><i class="w-3 h-3" data-lucide="check-circle-2"></i>可验收</span>
+    </div>
+  </div>
+  <div class="chat">
+    <div class="msg-row"><div class="msg user">我们要做 B2B 转化提升，用研先从哪下手？</div></div>
+    <div class="msg-row"><div class="msg bot">先做预售诊断 → 规划 Qual+Quant → 把证据固化到 Decision Memory（Trace Graph）。</div></div>
+    <div class="hint"><i data-lucide="sparkles"></i>交付物：访谈提纲 / 问卷草案 / 指标口径 / 结论证据链</div>
+  </div>
+</div>
+
+  <div class="grid grid-cols-1 gap-2 text-xs text-slate-600 font-bold mb-2">
+    <div>A. 诊断（B2B/B2C 预售场景澄清）</div>
+    <div>B. 用研交付（Qual + Quant：访谈 / 问卷 / 指标）</div>
+    <div>C. Decision Memory（Trace Graph 约束后续决策）</div>
+  </div>
+
+  <p class="text-[11px] text-slate-500 leading-relaxed font-extrabold mb-1">
+    从业务问题诊断 → 用研规划 → 可验证指标与材料 → 在 Decision Memory 中固化为 Trace Graph，
+    约束后续 AIGC 生成与实验策略搜索空间。
+  </p>
+
+  <a
+    href="https://userinsightagent.pages.dev/"
+    target="_blank"
+    rel="noopener"
+    class="mt-auto btn-primary text-white py-3 rounded-2xl text-center font-bold text-sm shadow-md"
+  >
+    打开 User Research Agent
+  </a>
+</div>
+
+<!-- ✅ Service System（合并 C/B 端） -->
+<div class="glass-card rounded-3xl p-7 flex flex-col">
+<div class="flex justify-between items-start mb-6">
+      <div>
+      <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded">Service System</span>
+      <h3 class="text-xl font-bold mt-2">AI客服：C端问答+B端优化</h3>
+      </div>
+<div class="flex flex-col items-end gap-2">
+<span class="case-badge">真实案例</span>
+<i class="text-indigo-500 w-6 h-6" data-lucide="headset"></i>
+</div>
+</div>
+<div class="grid grid-cols-1 mb-3">
+<div>
+<div class="mini-shell mb-3">
+<div class="mini-top">
+<div class="mini-left">
+<span class="mini-pill"><i class="w-3 h-3" data-lucide="messages-square"></i>引导对话</span>
+<span class="mini-pill"><i class="w-3 h-3" data-lucide="shield-check"></i>合规</span>
+</div>
+<div class="mini-tags">
+<span class="mini-pill"><i class="w-3 h-3" data-lucide="shield"></i>财险</span>
+<span class="mini-pill"><i class="w-3 h-3" data-lucide="receipt-text"></i>税险</span>
+</div>
+</div>
+<div class="chat">
+<div class="msg-row"><div class="msg user">我想买车险，应该怎么选？</div></div>
+<div class="msg-row"><div class="msg bot">我先确认 2 个问题：新车/旧车？是否有贷款或营运需求？</div></div>
+<div class="msg-row"><div class="msg user">旧车，非营运。</div></div>
+<div class="msg-row"><div class="msg bot">明白。交强险必选 + 三者/车损/医保外用药按预算组合，提供 3 套方案。</div></div>
+<div class="hint"><i data-lucide="sparkles"></i>多轮澄清 → 方案推荐 → 合规提示</div>
+</div>
+</div>
+
+<h4 class="font-bold text-slate-900 text-sm mb-1">C端：保险智能顾问 & B端客诉闭环</h4>
+<p class="text-[11px] text-slate-500 leading-relaxed mb-1">
+  C 端：利用国寿、太平洋、人保、平安等保司官网答疑文档搭建知识库，通过 Dify 进行预提问及多轮对话引导用户明确问题，输出可解释方案与合规提示。<br>
+  B 端：基于 NLP + RAG 做客诉语义分类、归因与风险预警，看板化整理，帮助管理人员提高对一线员工的回复内容质检与优化效率。
+</p>
+
+<div class="mt-auto flex flex-col gap-3">
+  <a
+    href="https://chatbot-customer-service.myrawzm0406.online/"
+    target="_blank"
+    rel="noopener"
+    class="btn-primary text-white py-2 rounded-2xl text-center font-bold text-sm shadow-md"
+  >
+    C 端 · ChatBot via Dify（保险）
+  </a>
+  <a
+    href="https://customer-feedback.myrawzm0406.online/"
+    target="_blank"
+    rel="noopener"
+    class="btn-primary text-white py-2 rounded-2xl text-center font-bold text-sm shadow-md"
+  >
+    B 端 · 客诉优化 Copilot（新零售胖东来）
+  </a>
+</div>
+</div>
+</div>
+</details>
+<!-- 数据分析（可折叠） -->
+
+<!-- AIGC自动化（待完善） -->
+
+</div>
+</main>
+<!-- 底部灰色小字（手机端隐藏避免挡内容） -->
+<div class="fixed left-0 right-0 bottom-0 z-20 pointer-events-none hidden md:block">
+<div class="max-w-7xl mx-auto px-4 md:px-8 pb-3">
+<div class="flex justify-center">
+<p class="footer-pill text-center text-[12px] text-slate-400 bg-white/60 backdrop-blur px-3 py-1 rounded-full border border-slate-200/60">
+          联系作者：
+          <a href="mailto:myrawzm0406@163.com" rel="noopener" target="_blank">myrawzm0406@163.com</a>
+          · 微信 15301052620 · 查看文档
+          <a href="https://docs.qq.com/doc/DVEtCTWdCc0dsa2pJ" rel="noopener" target="_blank">其他历史内容（25年8月后停止更新）</a>
+</p>
+</div>
+</div>
+</div>
+<!-- 水印 -->
+<div class="wm-wrap">
+<div class="wm-card">
+<div class="wm-title">
+<span class="wm-icon"><i class="w-4 h-4" data-lucide="sparkles" style="color:#93c5fd;"></i></span>
+        Advertiser OS · 仅供个人原型展示
+      </div>
+<div class="wm-text">
+<div>联系：myrawzm0406@163.com · WeChat 15301052620</div>
+<div>原创作品 · 禁止商用 / 抄袭 / 转卖</div>
+</div>
+</div>
+</div>
+<script>
+    lucide.createIcons();
+
+    const FONT_FAMILY = 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC","Source Han Sans SC", Arial, sans-serif';
+
+    // 漏斗图
+    const funnelChart = echarts.init(document.getElementById('funnelContainer'));
+    funnelChart.setOption({
+      backgroundColor: 'transparent',
+      textStyle: { fontFamily: FONT_FAMILY },
+      tooltip: { trigger: 'item', formatter: '{b} : {c}%' },
+      color: ['#1677FF', '#3B82F6', '#60A5FA', '#93C5FD'],
+      series: [{
+        name: '转化率',
+        type: 'funnel',
+        left: '6%', right: '6%', top: 0, bottom: 0, width: '88%',
+        min: 0, max: 100,
+        sort: 'descending', gap: 2,
+        label: { show: true, position: 'inside', fontSize: 10, color: '#fff', fontFamily: FONT_FAMILY },
+        data: [
+          { value: 100, name: '全网曝光' },
+          { value: 65,  name: '咨询转化' },
+          { value: 38,  name: '意向锁单' },
+          { value: 12,  name: '最终交付' }
+        ]
+      }]
+    });
+
+    // 桑基图
+    const sankeyChart = echarts.init(document.getElementById('sankeyContainer'));
+    const blue = {
+      a: '#0B5FFF',
+      b: '#1677FF',
+      c: '#3B82F6',
+      d: '#60A5FA',
+      e: '#93C5FD',
+      mid:'#0EA5E9',
+      ok: '#2563EB',
+      loss:'#94A3B8'
+    };
+
+    sankeyChart.setOption({
+      backgroundColor: 'transparent',
+      textStyle: { fontFamily: FONT_FAMILY },
+      tooltip: { trigger: 'item' },
+      series: [{
+        type: 'sankey',
+        left: 0, right: 0, top: 0, bottom: 0, /* ✅ topght 修复 */
+        nodeGap: 10,
+        nodeWidth: 14,
+        emphasis: { focus: 'adjacency' },
+        label: { fontSize: 10, color: '#334155', fontWeight: 800, fontFamily: FONT_FAMILY },
+        lineStyle: { color: 'source', opacity: 0.35, curveness: 0.5 },
+        data: [
+          { name: '竞价广告', itemStyle: { color: blue.a } },
+          { name: 'Affiliate', itemStyle: { color: blue.b } },
+          { name: 'KOL', itemStyle: { color: blue.c } },
+          { name: 'ASA', itemStyle: { color: blue.d } },
+          { name: 'ASO', itemStyle: { color: blue.e } },
+          { name: '高潜用户', itemStyle: { color: blue.mid } },
+          { name: '转化完成', itemStyle: { color: blue.ok } },
+          { name: '流失', itemStyle: { color: blue.loss } }
+        ],
+        links: [
+          { source: '竞价广告', target: '高潜用户', value: 50 },
+          { source: 'Affiliate', target: '高潜用户', value: 35 },
+          { source: 'KOL', target: '高潜用户', value: 22 },
+          { source: 'ASA', target: '高潜用户', value: 14 },
+          { source: 'ASO', target: '高潜用户', value: 8 },
+          { source: '高潜用户', target: '转化完成', value: 28 },
+          { source: '高潜用户', target: '流失', value: 101 }
+        ]
+      }]
+    });
+
+    // B端真实数据柱状图
+    const serviceBChart = echarts.init(document.getElementById('serviceBChart'));
+    serviceBChart.setOption({
+      backgroundColor: 'transparent',
+      textStyle: { fontFamily: FONT_FAMILY },
+      tooltip: { trigger: 'axis' },
+      grid: { left: 28, right: 12, top: 14, bottom: 18 },
+      xAxis: {
+        type: 'category',
+        axisLabel: { fontSize: 10, color: '#64748b', fontFamily: FONT_FAMILY },
+        axisLine: { lineStyle: { color: '#e2e8f0' } },
+        data: ['退款','物流','质量','服务','其他']
+      },
+      yAxis: {
+        type: 'value',
+        axisLabel: { fontSize: 10, color: '#94a3b8', fontFamily: FONT_FAMILY },
+        splitLine: { lineStyle: { color: '#eef2f7' } }
+      },
+      series: [{
+        name: '客诉量',
+        type: 'bar',
+        barWidth: 16,
+        data: [36, 22, 30, 18, 12]
+      }]
+    });
+
+    window.addEventListener('resize', () => {
+      funnelChart.resize();
+      sankeyChart.resize();
+      serviceBChart.resize();
+    });
+  
+
+    // Simple tabs (for quick scanning)
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-tab');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+        const panel = document.getElementById(id);
+        if(panel) panel.classList.remove('hidden');
+      });
+    });
+</script>
+</body>
+</html>
